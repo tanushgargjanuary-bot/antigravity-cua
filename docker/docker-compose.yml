@@ -1,0 +1,16 @@
+services:
+  antigravity-sandbox:
+    build:
+      context: .
+      dockerfile: Dockerfile.headless
+    image: antigravity-cua-sandbox:latest
+    container_name: antigravity-cua-guest
+    restart: unless-stopped
+    shm_size: '2gb'
+    environment:
+      - DISPLAY=:99
+    volumes:
+      - sandbox_data:/workspace
+
+volumes:
+  sandbox_data:

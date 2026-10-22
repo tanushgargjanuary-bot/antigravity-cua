@@ -1,16 +1,20 @@
 ---
 name: cua-sandbox
-description: Route code execution and browser navigation to an isolated remote cloud VM (CUA / Modal / E2B). Ensures zero local window popups and zero host desktop interference.
+description: Route code execution and browser navigation to an isolated remote cloud VM or headless container (CUA / Modal / E2B). Ensures zero local window popups and zero host desktop interference.
 ---
 
 # Remote CUA Cloud Sandbox Skill
 
 ## Strict Invariant
 **NEVER execute GUI tools or non-headless browsers on the user's host laptop.**
-All commands, compilation jobs, and browser navigations MUST be dispatched to off-host cloud sandboxes.
+All commands, compilation jobs, and browser navigations MUST be dispatched to off-host cloud sandboxes or RAM-based virtual displays (`DISPLAY=:99`).
 
-## Available Tools
-* `cua_cloud_exec`: Run terminal commands in the remote Linux VM.
-* `cua_cloud_browser_task`: Run browser tasks in the remote cloud virtual display.
-* `cua_cloud_screenshot`: Inspect the remote desktop frame buffer.
-* `cua_cloud_destroy`: Clean up and terminate the remote space.
+## Production Tools
+* `cua_spawn_sandbox`: Spin up an isolated micro-VM / container with lease TTL.
+* `cua_exec_isolated`: Execute shell commands inside the remote sandbox.
+* `cua_capture_virtual_screen`: Capture the virtual Xvfb framebuffer directly from guest RAM.
+* `cua_mouse_click`: Send mouse click events to virtual display coordinates.
+* `cua_keyboard_type`: Type keystrokes into the active virtual window.
+* `cua_keyboard_key`: Send special key combinations.
+* `cua_release_sandbox`: Clean up and terminate the sandbox.
+* `cua_reap_orphans`: Watchdog cleanup of expired sandboxes.

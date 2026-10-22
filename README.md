@@ -1,26 +1,64 @@
-# Antigravity CUA Bridge
+# Antigravity CUA Bridge (v0.2.0)
 
-An open-source integration that connects **Google Antigravity** to **CUA (trycua)** isolated sandboxes and computer use via the Model Context Protocol (MCP).
+[![CI](https://github.com/tanushgargjanuary-bot/antigravity-cua/actions/workflows/ci.yml/badge.svg)](https://github.com/tanushgargjanuary-bot/antigravity-cua/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Python: 3.10+](https://img.shields.io/badge/Python-3.10%2B-brightgreen.svg)](https://www.python.org/)
 
----
-
-## What It Does
-* **Zero Host Interference**: Runs untrusted shell commands, heavy compilation jobs, and scripts inside an isolated remote or containerized Cua Space micro-VM. It never opens windows on your physical laptop or touches your local desktop.
-* **Isolated Virtual Screen**: Captures and inspects dedicated headless virtual desktops instead of interfering with your personal active workspace.
-* **Full MCP Integration**: Exposes standard tools (`cua_exec_command`, `cua_save_file`, `cua_space_screenshot`, `cua_cleanup_space`) directly to the Antigravity agent loop.
+Production-grade integration connecting **Google Antigravity** agents to **CUA Spaces** (Modal, E2B, cloud micro-VMs, or headless Xvfb containers) via the Model Context Protocol (MCP).
 
 ---
 
-## Quickstart
+## Architecture & Guarantees
 
-### 1. Installation
+```mermaid
+graph TD
+    Agent[Antigravity Agent] -->|MCP Tools| Server[FastMCP / MCPServer Bridge]
+    Server --> Engine[SandboxEngine]
+    Engine --> LeaseMgr[(SQLite Lease Manager: ~/.antigravity-cua/state.db)]
+    Engine --> Watchdog[Orphan Reaper Watchdog]
+    Engine --> SpacesD[SpacesD Guest Protocol]
+    SpacesD --> GuestVM[Isolated Sandbox: Modal / E2B / Xvfb Container]
+    GuestVM --> VScreen[Xvfb Virtual Display :99 in RAM]
+    
+    subgraph Host Isolation
+        Monitor[Physical Monitor / Host Desktop]
+        GuestVM -.->|ZERO Focus / ZERO Windows| Monitor
+    end
+```
+
+### Invariants
+1. **Zero Host Interference**: Under no circumstances does a window, browser, or GUI element ever render on your physical laptop screen. Keystrokes, mouse events, and clipboard operations are strictly directed to the virtual framebuffer (`:99`) in guest RAM.
+2. **Persistent TTL Leases**: Sandbox states and expiration times are persisted in SQLite (`~/.antigravity-cua/state.db`). Active commands automatically renew the lease.
+3. **Automated Resource Reaping**: Dangling or orphaned micro-VMs are automatically reclaimed by the watchdog reaper, preventing unexpected cloud costs.
+4. **Real-Time PTY Streaming**: Low-latency terminal I/O over the guest SpacesD daemon.
+
+---
+
+## MCP Tools Reference
+
+| MCP Tool | Description |
+|---|---|
+| `cua_spawn_sandbox` | Provision an isolated sandbox (image, TTL lease, cloud provider). |
+| `cua_exec_isolated` | Execute bash commands inside guest container with lease extension. |
+| `cua_capture_virtual_screen` | Capture PNG bytes of the virtual display from RAM without host display capture. |
+| `cua_mouse_click` | Click at `(x, y)` (`left`, `right`, `middle`, `double`) on virtual display. |
+| `cua_mouse_move` | Move pointer to `(x, y)` inside guest display. |
+| `cua_keyboard_type` | Type text strings into active virtual window. |
+| `cua_keyboard_key` | Send special keys (`Return`, `Tab`, `Escape`, `ctrl+c`). |
+| `cua_mouse_scroll` | Scroll mouse wheel (`up` / `down`) on virtual display. |
+| `cua_release_sandbox` | Tear down sandbox and release all allocated resources immediately. |
+| `cua_reap_orphans` | Query SQLite for expired sandboxes and destroy them. |
+
+---
+
+## Installation & Setup
+
+### 1. Install Package
 ```bash
 pip install -e .
 ```
-*(Requires `cua` and `mcp`).*
 
-### 2. Connect to Antigravity (`mcp_config.json`)
-Add to `~/.gemini/config/mcp_config.json`:
+### 2. Configure Antigravity MCP (`~/.gemini/config/mcp_config.json`)
 ```json
 {
   "mcpServers": {
@@ -32,12 +70,33 @@ Add to `~/.gemini/config/mcp_config.json`:
 }
 ```
 
-### 3. Usage
-Once enabled, Antigravity can dispatch tasks to isolated Cua spaces:
+### 3. Provider Configuration (Optional)
+Set environment variables to customize cloud providers:
+```bash
+export CUA_PROVIDER="modal"     # Options: cloud, modal, e2b, daytona, docker
+export MODAL_TOKEN="your-token"
+export E2B_API_KEY="your-key"
 ```
-"Run this script inside an isolated Ubuntu Cua Space and show me the output."
+
+---
+
+## Headless Container (Docker / Local)
+
+To run fully isolated local sandboxes with Xvfb:
+```bash
+cd docker
+docker compose up -d
 ```
-The command executes in the remote container and returns the output to Antigravity without ever touching your local machine.
+This initializes a headless guest on virtual display `:99` with Fluxbox and xdotool in RAM.
+
+---
+
+## Testing
+
+Run unit and integration tests:
+```bash
+PYTHONPATH=src python -m unittest discover -s tests -p "test_*.py" -v
+```
 
 ---
 

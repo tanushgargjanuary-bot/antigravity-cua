@@ -19,6 +19,10 @@ class CuaConfig:
     e2b_api_key: str = os.getenv("E2B_API_KEY", "")
     modal_token: str = os.getenv("MODAL_TOKEN", "")
 
+    # Lease and persistence
+    default_lease_minutes: int = 15
+    db_path: str = ""
+
     @classmethod
     def load(cls) -> "CuaConfig":
         provider = os.getenv("CUA_PROVIDER", "cloud").lower()
