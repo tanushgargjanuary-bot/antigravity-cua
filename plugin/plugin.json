@@ -1,0 +1,6 @@
+{
+  "name": "antigravity-cua",
+  "version": "0.1.0",
+  "description": "Antigravity plugin for isolated cloud sandboxes and remote container execution via CUA.",
+  "author": "Tanush Garg"
+}
