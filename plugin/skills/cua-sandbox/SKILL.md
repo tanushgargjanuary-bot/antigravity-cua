@@ -1,18 +1,16 @@
 ---
 name: cua-sandbox
-description: Run untrusted commands, heavy builds, or containerized automation inside an isolated Cua Space. Use when the user wants isolated execution without touching the local host machine.
+description: Route code execution and browser navigation to an isolated remote cloud VM (CUA / Modal / E2B). Ensures zero local window popups and zero host desktop interference.
 ---
 
-# Cua Sandbox Skill
+# Remote CUA Cloud Sandbox Skill
 
-## When to Use
-Use this skill when:
-1. The user asks to run untrusted code, shell commands, or test scripts in a clean sandbox.
-2. The user wants to run Linux commands on a Windows machine without local WSL setup.
-3. The user requests remote/cloud execution that should never open windows on the host desktop.
+## Strict Invariant
+**NEVER execute GUI tools or non-headless browsers on the user's host laptop.**
+All commands, compilation jobs, and browser navigations MUST be dispatched to off-host cloud sandboxes.
 
-## Tools
-* `cua_exec_command`: Run commands inside the isolated Cua Space.
-* `cua_save_file`: Write files directly into the sandbox filesystem.
-* `cua_space_screenshot`: View the headless virtual desktop of the space.
-* `cua_cleanup_space`: Delete and destroy the throwaway space.
+## Available Tools
+* `cua_cloud_exec`: Run terminal commands in the remote Linux VM.
+* `cua_cloud_browser_task`: Run browser tasks in the remote cloud virtual display.
+* `cua_cloud_screenshot`: Inspect the remote desktop frame buffer.
+* `cua_cloud_destroy`: Clean up and terminate the remote space.
