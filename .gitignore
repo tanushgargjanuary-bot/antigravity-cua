@@ -9,3 +9,10 @@ htmlcov/
 dist/
 build/
 *.egg-info/
+
+# Local secrets and configuration
+.env
+.env.*
+!.env.example
+.venv/
+venv/
