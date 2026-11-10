@@ -102,3 +102,5 @@ PYTHONPATH=src python -m unittest discover -s tests -p "test_*.py" -v
 
 ## License
 MIT
+
+<!-- CodeRabbit review trigger -->
